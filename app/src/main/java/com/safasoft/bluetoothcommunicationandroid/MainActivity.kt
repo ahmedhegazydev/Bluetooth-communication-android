@@ -1,6 +1,5 @@
 package com.safasoft.bluetoothcommunicationandroid
 
-import android.R
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.content.BroadcastReceiver
@@ -102,7 +101,7 @@ class MainActivity : AppCompatActivity() {
                 )
                 listView?.adapter = ArrayAdapter<String>(
                     this@MainActivity,
-                    R.layout.simple_list_item_1, mDeviceList
+                    android.R.layout.simple_list_item_1, mDeviceList
                 )
             }
         }
