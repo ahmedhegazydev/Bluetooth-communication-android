@@ -7,7 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Bundle
-import android.util.Log
+import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.ListView
 import android.widget.Toast
@@ -19,6 +19,7 @@ class MainActivity : AppCompatActivity() {
     val mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
     private var listView: ListView? = null
     private val mDeviceList = ArrayList<String>()
+    lateinit var arrayAdapter: ArrayAdapter<String>
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -28,9 +29,13 @@ class MainActivity : AppCompatActivity() {
         listView = findViewById(R.id.listView)
 
 
-        mBluetoothAdapter.startDiscovery();
-        val filter = IntentFilter(BluetoothDevice.ACTION_FOUND)
-        registerReceiver(mReceiver, filter)
+        arrayAdapter = ArrayAdapter(
+            this@MainActivity,
+            android.R.layout.simple_list_item_1,
+            mDeviceList
+        )
+        listView?.adapter = arrayAdapter
+
 
     }
 
@@ -50,7 +55,8 @@ class MainActivity : AppCompatActivity() {
 
         } else {
             // Bluetooth is enabled
-            mBluetoothAdapter.disable()
+//            mBluetoothAdapter.disable()
+            startDiscovering()
 
         }
     }
@@ -69,42 +75,77 @@ class MainActivity : AppCompatActivity() {
 //                setListAdapter(ArrayAdapter(this, R.layout.list, s))
 
 
+                startDiscovering()
+
+
             } else if (resultCode == RESULT_CANCELED) {
                 Toast.makeText(this, "User canceled", Toast.LENGTH_LONG).show()
             }
         }
     }
 
+    private fun startDiscovering() {
+        val filter = IntentFilter(BluetoothDevice.ACTION_FOUND)
+//        val filter = IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED)
+        registerReceiver(mReceiver, filter)
+    }
+
 
     override fun onDestroy() {
-        unregisterReceiver(mReceiver)
         super.onDestroy()
+        unregisterReceiver(mReceiver)
+
     }
 
     private val mReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent) {
             val action = intent.action
-            if (BluetoothDevice.ACTION_FOUND == action) {
-                val device = intent
-                    .getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
-                mDeviceList.add(
-                    """
-                    ${device!!.name}
-                    ${device.address}
-                    """.trimIndent()
-                )
-                Log.i(
-                    "BT", """
-     ${device.name}
-     ${device.address}
-     """.trimIndent()
-                )
-                listView?.adapter = ArrayAdapter<String>(
-                    this@MainActivity,
-                    android.R.layout.simple_list_item_1, mDeviceList
-                )
+
+            if (action == BluetoothDevice.ACTION_FOUND){
+                val device: BluetoothDevice? =
+                    intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
+                mDeviceList.add(device?.name ?: "null")
+                arrayAdapter.notifyDataSetChanged()
+
             }
+
+//            if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
+//                when (intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)) {
+//                    BluetoothAdapter.STATE_OFF -> {
+//                        Log.e("TAG", "onReceive: ")
+//                    }
+//                    BluetoothAdapter.STATE_TURNING_OFF -> {
+//                        Log.e("TAG", "onReceive: ")
+//
+//                    }
+//                    BluetoothAdapter.STATE_ON -> {
+//                        Log.e("TAG", "onReceive: ")
+//                        val device = intent
+//                            .getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
+//                        mDeviceList.add("""${device?.name}${device?.address}""".trimIndent())
+////                        Log.i("BT", """${device.name} ${device.address}""".trimIndent())
+//                        listView?.adapter = ArrayAdapter(
+//                            this@MainActivity,
+//                            android.R.layout.simple_list_item_1, mDeviceList
+//                        )
+//
+//                    }
+//                    BluetoothAdapter.STATE_TURNING_ON -> {
+//                        Log.e("TAG", "onReceive: ")
+//
+//                    }
+//                }
+//            }
+
+
+
         }
+
     }
+
+    fun onBlueTooth(view: View) {
+        mBluetoothAdapter.startDiscovery();
+    }
+
 
 }
