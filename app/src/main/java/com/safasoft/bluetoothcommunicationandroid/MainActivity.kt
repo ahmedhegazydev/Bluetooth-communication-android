@@ -1,20 +1,31 @@
 package com.safasoft.bluetoothcommunicationandroid
 
+import android.Manifest
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.ListView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 
 
 class MainActivity : AppCompatActivity() {
+
+
+    companion object {
+        const val REQUEST_ENABLE_BT = 42
+//        val REQUEST_QUERY_DEVICES = 142
+    }
 
     val mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
     private var listView: ListView? = null
@@ -28,13 +39,50 @@ class MainActivity : AppCompatActivity() {
 
         listView = findViewById(R.id.listView)
 
+//        startDiscovering()
+//        arrayAdapter = ArrayAdapter(
+//            this@MainActivity,
+//            android.R.layout.simple_list_item_1,
+//            mDeviceList
+//        )
+//        listView?.adapter = arrayAdapter
 
-        arrayAdapter = ArrayAdapter(
-            this@MainActivity,
-            android.R.layout.simple_list_item_1,
-            mDeviceList
-        )
-        listView?.adapter = arrayAdapter
+
+        if (mBluetoothAdapter == null) {
+            // Device doesn't support Bluetooth
+            Toast.makeText(
+                applicationContext,
+                "Device doesn't support Bluetooth",
+                Toast.LENGTH_SHORT
+            ).show()
+        } else if (!mBluetoothAdapter?.isEnabled) {
+            val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT)
+        }
+
+        val permission1 = ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH)
+        val permission2 =
+            ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_ADMIN)
+//        val permission3 = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+//        val permission4 = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+        if (permission1 != PackageManager.PERMISSION_GRANTED
+            || permission2 != PackageManager.PERMISSION_GRANTED
+//            || permission3 != PackageManager.PERMISSION_GRANTED
+//            || permission4 != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(
+                    Manifest.permission.BLUETOOTH,
+                    Manifest.permission.BLUETOOTH_ADMIN,
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                ),
+                642
+            )
+        } else {
+            Log.d("DISCOVERING-PERMISSIONS", "Permissions Granted")
+        }
 
 
     }
@@ -45,8 +93,6 @@ class MainActivity : AppCompatActivity() {
 
         if (mBluetoothAdapter == null) {
             // Device does not support Bluetooth
-
-
         } else if (!mBluetoothAdapter.isEnabled) {
             // Bluetooth is not enabled :)
 
@@ -56,7 +102,7 @@ class MainActivity : AppCompatActivity() {
         } else {
             // Bluetooth is enabled
 //            mBluetoothAdapter.disable()
-            startDiscovering()
+//            startDiscovering()
 
         }
     }
@@ -75,7 +121,7 @@ class MainActivity : AppCompatActivity() {
 //                setListAdapter(ArrayAdapter(this, R.layout.list, s))
 
 
-                startDiscovering()
+//                startDiscovering()
 
 
             } else if (resultCode == RESULT_CANCELED) {
@@ -93,15 +139,14 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        unregisterReceiver(mReceiver)
+//        unregisterReceiver(mReceiver)
 
     }
 
     private val mReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent) {
             val action = intent.action
-
-            if (action == BluetoothDevice.ACTION_FOUND){
+            if (action == BluetoothDevice.ACTION_FOUND) {
                 val device: BluetoothDevice? =
                     intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
                 mDeviceList.add(device?.name ?: "null")
@@ -138,14 +183,51 @@ class MainActivity : AppCompatActivity() {
 //            }
 
 
-
         }
 
     }
 
     fun onBlueTooth(view: View) {
-        mBluetoothAdapter.startDiscovery();
+        if (mBluetoothAdapter?.isDiscovering == true) {
+            mBluetoothAdapter?.cancelDiscovery()
+        }
+        var filter = IntentFilter(BluetoothDevice.ACTION_FOUND)
+        this.registerReceiver(receiver, filter)
+        filter = IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_STARTED)
+        this.registerReceiver(receiver, filter)
+        filter = IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
+        this.registerReceiver(receiver, filter)
+        mBluetoothAdapter?.startDiscovery()
     }
 
+
+    // Create a BroadcastReceiver for ACTION_FOUND.
+    private val receiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            when (intent.action) {
+                BluetoothDevice.ACTION_FOUND -> {
+                    // Discovery has found a device. Get the BluetoothDevice
+                    // object and its info from the Intent.
+                    val device: BluetoothDevice? =
+                        intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
+                    val deviceName = device?.name
+                    val deviceHardwareAddress = device?.address // MAC address
+                    var msg = ""
+                    if (deviceName.isNullOrBlank()) {
+                        msg = deviceHardwareAddress.toString()
+                    } else {
+                        msg = "$deviceName $deviceHardwareAddress"
+                    }
+                    Log.d("DISCOVERING-DEVICE", msg)
+                }
+                BluetoothAdapter.ACTION_DISCOVERY_STARTED -> {
+                    Log.d("DISCOVERING-STARTED", "isDiscovering")
+                }
+                BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> {
+                    Log.d("DISCOVERING-FINISHED", "FinishedDiscovering")
+                }
+            }
+        }
+    }
 
 }
