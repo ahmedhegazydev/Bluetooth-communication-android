@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">BluetoothCommunicationAndroid</string>
+    <string name="camera_and_location_rationale" />
 </resources>

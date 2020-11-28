@@ -24,6 +24,7 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         const val REQUEST_ENABLE_BT = 42
+        const val REQUEST_DEVICE_DISCOVERABLE = 33
 //        val REQUEST_QUERY_DEVICES = 142
     }
 
@@ -40,12 +41,12 @@ class MainActivity : AppCompatActivity() {
         listView = findViewById(R.id.listView)
 
 //        startDiscovering()
-//        arrayAdapter = ArrayAdapter(
-//            this@MainActivity,
-//            android.R.layout.simple_list_item_1,
-//            mDeviceList
-//        )
-//        listView?.adapter = arrayAdapter
+        arrayAdapter = ArrayAdapter(
+            this@MainActivity,
+            android.R.layout.simple_list_item_1,
+            mDeviceList
+        )
+        listView?.adapter = arrayAdapter
 
 
         if (mBluetoothAdapter == null) {
@@ -55,7 +56,7 @@ class MainActivity : AppCompatActivity() {
                 "Device doesn't support Bluetooth",
                 Toast.LENGTH_SHORT
             ).show()
-        } else if (!mBluetoothAdapter?.isEnabled) {
+        } else if (!mBluetoothAdapter.isEnabled) {
             val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT)
         }
@@ -105,6 +106,10 @@ class MainActivity : AppCompatActivity() {
 //            startDiscovering()
 
         }
+
+
+        val filter = IntentFilter(BluetoothAdapter.ACTION_SCAN_MODE_CHANGED)
+        registerReceiver(receiverDiscovarable, filter)
     }
 
 
@@ -123,7 +128,6 @@ class MainActivity : AppCompatActivity() {
 
 //                startDiscovering()
 
-
             } else if (resultCode == RESULT_CANCELED) {
                 Toast.makeText(this, "User canceled", Toast.LENGTH_LONG).show()
             }
@@ -139,7 +143,8 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-//        unregisterReceiver(mReceiver)
+        unregisterReceiver(mReceiver)
+        unregisterReceiver(receiverDiscovarable)
 
     }
 
@@ -189,7 +194,7 @@ class MainActivity : AppCompatActivity() {
 
     fun onBlueTooth(view: View) {
         if (mBluetoothAdapter?.isDiscovering == true) {
-            mBluetoothAdapter?.cancelDiscovery()
+            mBluetoothAdapter.cancelDiscovery()
         }
         var filter = IntentFilter(BluetoothDevice.ACTION_FOUND)
         this.registerReceiver(receiver, filter)
@@ -197,7 +202,39 @@ class MainActivity : AppCompatActivity() {
         this.registerReceiver(receiver, filter)
         filter = IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
         this.registerReceiver(receiver, filter)
+//        filter = IntentFilter(BluetoothAdapter.ACTION_SCAN_MODE_CHANGED)
+//        this.registerReceiver(receiver, filter)
         mBluetoothAdapter?.startDiscovery()
+    }
+
+
+    private val receiverDiscovarable = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            when (intent.action) {
+
+                BluetoothAdapter.ACTION_SCAN_MODE_CHANGED -> {
+                    Log.d("DISCOVERING-FINISHED", "ACTION_SCAN_MODE_CHANGED")
+                    val mode = intent.getIntExtra(
+                        BluetoothAdapter.EXTRA_SCAN_MODE,
+                        BluetoothAdapter.ERROR
+                    )
+                    when (mode) {
+                        BluetoothAdapter.SCAN_MODE_CONNECTABLE -> {
+                            Log.e("TAG", "onReceive: ")
+                        }
+                        BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE -> {
+                            Log.e("TAG", "onReceive: ")
+
+                        }
+                        BluetoothAdapter.SCAN_MODE_NONE -> {
+                            Log.e("TAG", "onReceive: ")
+
+                        }
+                    }
+
+                }
+            }
+        }
     }
 
 
@@ -219,6 +256,10 @@ class MainActivity : AppCompatActivity() {
                         msg = "$deviceName $deviceHardwareAddress"
                     }
                     Log.d("DISCOVERING-DEVICE", msg)
+
+//                    mDeviceList.add(msg)
+                    mDeviceList.add(deviceName.toString())
+                    arrayAdapter.notifyDataSetChanged()
                 }
                 BluetoothAdapter.ACTION_DISCOVERY_STARTED -> {
                     Log.d("DISCOVERING-STARTED", "isDiscovering")
@@ -226,8 +267,37 @@ class MainActivity : AppCompatActivity() {
                 BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> {
                     Log.d("DISCOVERING-FINISHED", "FinishedDiscovering")
                 }
+                BluetoothAdapter.ACTION_SCAN_MODE_CHANGED -> {
+                    Log.d("DISCOVERING-FINISHED", "ACTION_SCAN_MODE_CHANGED")
+                    val mode = intent.getIntExtra(
+                        BluetoothAdapter.EXTRA_SCAN_MODE,
+                        BluetoothAdapter.ERROR
+                    )
+                    when (mode) {
+                        BluetoothAdapter.SCAN_MODE_CONNECTABLE -> {
+                            Log.e("TAG", "onReceive: ")
+                        }
+                        BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE -> {
+                            Log.e("TAG", "onReceive: ")
+
+                        }
+                        BluetoothAdapter.SCAN_MODE_NONE -> {
+                            Log.e("TAG", "onReceive: ")
+
+                        }
+                    }
+
+                }
             }
         }
+    }
+
+    fun enableDiscoverability(view: View) {
+
+        val intent = Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE)
+        intent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 20)///10 sec
+//        startActivityForResult(intent, REQUEST_DEVICE_DISCOVERABLE)
+        startActivity(intent)
     }
 
 }

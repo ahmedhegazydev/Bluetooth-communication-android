@@ -2,13 +2,27 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.safasoft.bluetoothcommunicationandroid">
 
+    <uses-permission
+        android:name="android.permission.BLUETOOTH"
+        android:required="true" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission
+        android:name="android.permission.ACCESS_WIFI_STATE"
+        android:required="true" />
+    <uses-permission
+        android:name="android.permission.CHANGE_WIFI_STATE"
+        android:required="true" />
+    <uses-permission
+        android:name="android.permission.ACCESS_FINE_LOCATION"
+        android:required="true" />
+    <uses-permission
+        android:name="android.permission.ACCESS_COARSE_LOCATION"
+        android:required="true" />
+    <uses-permission
+        android:name="android.permission.INTERNET"
+        android:required="true" />
 
-
-    <uses-permission android:name="android.permission.BLUETOOTH"
-        android:required="true"
-        />
-    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
-    <uses-feature android:name="android.software.companion_device_setup"/>
+    <uses-feature android:name="android.software.companion_device_setup" />
 
     <application
         android:allowBackup="true"
@@ -19,19 +33,39 @@
         android:theme="@style/Theme.BluetoothCommunicationAndroid">
 
         <activity android:name=".MainActivity2">
+
+            <!-- <intent-filter> -->
+            <!-- <action android:name="android.intent.action.MAIN" /> -->
+
+
+            <!-- <category android:name="android.intent.category.LAUNCHER" /> -->
+            <!-- </intent-filter> -->
+        </activity>
+        <activity android:name=".MainActivity">
+            <!--            <intent-filter>-->
+            <!--                <action android:name="android.intent.action.MAIN" />-->
+
+            <!--                <category android:name="android.intent.category.LAUNCHER" />-->
+            <!--            </intent-filter>-->
+        </activity>
+        <activity android:name=".MainActivity3">
+
+            <!-- <intent-filter> -->
+            <!-- <action android:name="android.intent.action.MAIN" /> -->
+
+
+            <!-- <category android:name="android.intent.category.LAUNCHER" /> -->
+            <!-- </intent-filter> -->
+        </activity>
+
+        <activity android:name="com.safasoft.chat.MainActivity">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
-
-        <activity android:name=".MainActivity">
-<!--            <intent-filter>-->
-<!--                <action android:name="android.intent.action.MAIN" />-->
-
-<!--                <category android:name="android.intent.category.LAUNCHER" />-->
-<!--            </intent-filter>-->
         </activity>
     </application>
 
